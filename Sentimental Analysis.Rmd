@@ -1,467 +1,185 @@
 ---
 title: "R Notebook"
-output:
-  word_document: default
-  html_notebook: default
-  always_allow_html: yes
+output: html_notebook
 ---
 
-# Part-A
 
-This chunk help us to load the dataset.
-
-```{r}
-
-myFile <- 'D:/ahmed al/shz.txt' # the local file path to my research prospectus
-# fill = TRUE b/c rows are of unequal length
-#fill: Sometimes, we may get a file that contains the
-# unequal length of rows, and we have to add blank spaces to that missing values.
-dat <- read.table(myFile, header = FALSE, fill = TRUE)
-```
-
-Loading our required packages. 
-
-```{r}
-
-library(dplyr) # for data wrangling
-library(tidytext) # for Natural Language Processing
-library(stringr) # to deal with strings
-library(wordcloud) # to for generating word clouds
-library(knitr) # for tables, It combines many features into one package
-library(DT) # for dynamic tables
-library(tidyr) 
-#Tools to help to create tidy data, where each column is a variable, 
-#each row is an observation, and each cell contains a single value.
-```
-Gather help us to create a single colounm of all the words.
-```{r}
-tidy_dat <- tidyr::gather(dat, key, word) %>% select(word)
-head(tidy_dat)
-```
-length tells us about the total number of words(also known as tokens in NLP)
-
-```{r}
-
-tidy_dat$word %>% length() #there are 2832 tokens in my document 
-```
-Unique help us to identify the unique words.
-
-```{r}
-unique(tidy_dat$word) %>% length() # 695 words are unique
-```
-Following commands help us to count the total number of words.
-
-```{r}
-tokens <- tidy_dat %>% 
-unnest_tokens(word, word) %>% 
-dplyr::count(word, sort = TRUE) %>% 
-ungroup()
-tokens %>% head(10)
-```
-
-Word cloud is graph that shows the most frequent words by there size. Following commands use the total number of repeatitions to create the word cloud.
-
-```{r}
-tokens %>% with(wordcloud(word, n, random.order = FALSE, max.words = 50))
-# Module #: Module Name 61
-# other choices 
-#colors=brewer.pal(8, “Dark2″)
-tokens %>% with(wordcloud(word, n, 
-random.order = FALSE, max.words = 50, 
-colors=brewer.pal(8, "Dark2")))
-tokens %>% with(wordcloud(word, n, 
-random.order = FALSE, max.words = 50, 
-colors="#AD1DA5"))
-
-```
-
-It removes the stopping words like is,or,am etc from the text data.
-
-```{r}
-# remove stop words
-data("stop_words")
-tokens_clean <- tokens %>%
- anti_join(stop_words,by = "word")
-
-```
-
-It removes the numbers from the text data.
-
-
-```{r}
-# remove numbers
-nums <- tokens_clean %>% filter(str_detect(word, "^[0-9]")) %>% 
-select(word) %>% unique()
-tokens_clean <- tokens_clean %>% 
- anti_join(nums, by = "word")
-```
-
-
-Following code removes the i.e and e.g from the data.
-```{r}
-# remove other stop words 
-uni_sw <- data.frame(word = c("i.e", "e.g."))
-tokens_clean <- tokens_clean %>% 
- anti_join(uni_sw, by = "word")
-```
-
-Creating the word cloud again without the numbers and stop words.
-```{r}
-# define a nice color palette
-pal <- brewer.pal(8,"Dark2")
-# plot the 50 most common words
-tokens_clean %>% 
- with(wordcloud(word, n, random.order = FALSE, max.words = 50, 
-colors=pal))
-
-```
-Following commands show the clean data with word frequencies.
-```{r}
-tokens_clean %>%
- DT::datatable()
-head(tokens_clean)
-```
-R sentiment packages help us to identify the sentiments from the text data. We created text and checked the sentiments with Rsentiments packages. 
-
-```{r}
-# Load the library
-library(RSentiment)
- #: Module Name 69
-calculate_total_presence_sentiment(c("This is a good text", "This is a bad text", 
-"This is a really bad text", "This is horrible")) 
-```
-This is telling us about the positive and negative sentiments of the sentences. 
-```{r}
-calculate_sentiment(c("This is a good text", 
- "This is a bad text", 
- "This is a really bad text", "This is horrible")) 
-```
-
-
-```{r}
-calculate_score(c("This is a good text", 
- "This is a bad text",
-"This is a really bad text", 
-"This is horrible"))
-
-```
-
-```{r}
-library(tidytext)
+```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-library(janeaustenr)
-library(stringr)
-library(wordcloud)
-library(reshape2)
+library(tidytext)
 library(textdata)
-```
+#text_df1 <- read.delim("C:/Users/Sajid/Document/saci.txt")
+#colnames(text_df1) = 'V1'
+#text_df2 <- read.delim("C:/Users/Sajid/Documents/accuenture.txt")
+#colnames(text_df2) = 'V1'
+text_df3 <- read.delim("C:/Users/Sajid/Desktop/reports/ADP-10K.txt")
+colnames(text_df3) = 'V1'
+text_df4 <- read.delim("C:/Users/Sajid/Desktop/reports/Akamai 2020 Annual Report.txt")
+colnames(text_df4) = 'V1'
+text_df5 <- read.delim("C:/Users/Sajid/Desktop/reports/yirendri.txt")
+colnames(text_df5) = 'V1'
+text_df6  <- read.delim("C:/Users/Sajid/Desktop/reports/yelp.txt")
+colnames(text_df6) = 'V1'
+text_df7 <- read.delim("C:/Users/Sajid/Desktop/reports/yahoo.txt")
+colnames(text_df7) = 'V1'
+text_df8<- read.delim("C:/Users/Sajid/Desktop/reports/xo.txt")
+colnames(text_df8) = 'V1'
+text_df9 =  read.delim("C:/Users/Sajid/Desktop/reports/weyland.txt")
+colnames(text_df9) = 'V1'
+text_df10  <- read.delim("C:/Users/Sajid/Desktop/reports/virtusa.txt")
+colnames(text_df10) = 'V1'
+text_df11 =  read.delim("C:/Users/Sajid/Desktop/reports/vipshop.txt")
+colnames(text_df11) = 'V1'
+text_df12 = read.delim("C:/Users/Sajid/Desktop/reports/versign.txt", header=FALSE)
+colnames(text_df12) = 'V1'
+text_df13 = read.delim("C:/Users/Sajid/Desktop/reports/ultimate.txt", header=FALSE)
+colnames(text_df13) = 'V1'
+text_df14 = read.delim("C:/Users/Sajid/Desktop/reports/twcows.txt")
+colnames(text_df14) = 'V1'
+text_df15 = read.delim("C:/Users/Sajid/Desktop/reports/tech target.txt")
+colnames(text_df15) = 'V1'
+text_df16 = read.delim("C:/Users/Sajid/Desktop/reports/stamps.com.txt", header=FALSE)
+colnames(text_df16) = 'V1'
+text_df17 = read.delim("C:/Users/Sajid/Desktop/reports/spsc.txt", header=FALSE)
+colnames(text_df17) = 'V1'
+text_df18 = read.delim("C:/Users/Sajid/Desktop/reports/sitestar.txt", header=FALSE)
+colnames(text_df18) = 'V1'
+text_df19 = read.delim("C:/Users/Sajid/Desktop/reports/shutter stock.txt", header=FALSE)
+colnames(text_df19) = 'V1'
+text_df20 =  read.delim("C:/Users/Sajid/Desktop/reports/sfly.txt", header=FALSE)
+colnames(text_df20) = 'V1'
+text_df21 = read.delim2("C:/Users/Sajid/Desktop/reports/NASDAQ_ACXM_2018.txt", header=FALSE, comment.char="#")
+colnames(text_df21) = 'V1'
+text_df22 =  read.delim("C:/Users/Sajid/Desktop/reports/sabr.txt")
+colnames(text_df22) = 'V1'
+text_df23 = read.delim("C:/Users/Sajid/Desktop/reports/rdwr.txt")
+colnames(text_df23) = 'V1'
+text_df24 = read.delim("C:/Users/Sajid/Desktop/reports/ccrc.txt")
+colnames(text_df24) = 'V1'
+text_df25 = read.delim("C:/Users/Sajid/Desktop/reports/crm.txt", header=FALSE)
+colnames(text_df25) = 'V1'
+text_df26 = read.delim("C:/Users/Sajid/Desktop/reports/csod.txt")
+colnames(text_df26) = 'V1'
+text_df27 =  read.delim("C:/Users/Sajid/Desktop/reports/echo.txt", header=FALSE, comment.char="#")
+colnames(text_df27) = 'V1'
+text_df28 = read.delim("C:/Users/Sajid/Desktop/reports/dox.txt", header=FALSE)
+colnames(text_df28) = 'V1'
+text_df29 = read.delim("C:/Users/Sajid/Desktop/reports/cdw.txt", header=FALSE)
+colnames(text_df29) = 'V1'
+text_df30 = read.delim("C:/Users/Sajid/Desktop/reports/ebix.txt", header=FALSE)
+colnames(text_df30) = 'V1'
+text_df31 = read.delim("C:/Users/Sajid/Desktop/reports/call.txt")
+colnames(text_df31) = 'V1'
+text_df32 = read.delim("C:/Users/Sajid/Desktop/reports/EIGI.txt")
+colnames(text_df32) = 'V1'
+text_df33 = read.delim("C:/Users/Sajid/Desktop/reports/EVLV.txt")
+colnames(text_df33) = 'V1'
+text_df34 = read.delim("C:/Users/Sajid/Desktop/reports/GOOG.txt")
+colnames(text_df34) = 'V1'
+text_df35 = read.delim("C:/Users/Sajid/Desktop/reports/GSB.txt")
+colnames(text_df35) = 'V1'
+text_df36 = read.delim("C:/Users/Sajid/Desktop/reports/grub.txt", header=FALSE)
+colnames(text_df36) = 'V1'
+text_df37 =read.delim("C:/Users/Sajid/Desktop/reports/FLWS.txt") 
+colnames(text_df37) = 'V1'
+text_df38 = read.delim("C:/Users/Sajid/Desktop/reports/CHKP.txt")
+colnames(text_df38) = 'V1'
+text_df39 =  read.delim("C:/Users/Sajid/Desktop/reports/GDDY.txt")
+colnames(text_df39) = 'V1'
+text_df40 = read.delim2("C:/Users/Sajid/Desktop/reports/IAC.txt")
+colnames(text_df40) = 'V1'
+text_df41 = read.delim("C:/Users/Sajid/Desktop/reports/eqix.txt")
+colnames(text_df41) = 'V1'
 
-There are dictionaries to identify the sentiments of the text data. There are three different libraries, affin, buing and nrc. Affin package gives sentiments in the numeric form and bing identify the positive and negative sentiments. and nrc can identify the different kind of the sentiments like trust, fear, sadness, anger, etc..
-```{r}
-get_sentiments("afinn")
-get_sentiments("bing")
-get_sentiments("nrc")
-data(sentiments)
-#dataset structure
-str(sentiments)
-```
-We are saving the affins as the affin_lexiocon variable. and we are doing same thing for the afinn, bing, nrc.
-```{r}
-afinn_lexicon <- get_sentiments("afinn")
-head(afinn_lexicon)
-
-```
-
-```{r}
-#NRC
-nrc_lexicon <- get_sentiments("nrc")
-head(nrc_lexicon)
-```
-
-
-```{r}
-#BING
-bing_lexicon <- get_sentiments("bing")
-head(bing_lexicon)
-```
-
-We are using Jane Austens data of books for the further analysis.
-```{r}
-tidy_books <- austen_books() %>%
- filter(book == "Emma") %>%
- group_by(book) %>%
-## Using row_number() with mutate() will create a column of consecutive numbers. The row_number() function 
-#is useful for creating an identification number (an ID variable). It is also useful for labeling each observation by a 
-#grouping variable.
-##cumsum() function in R Language is used to calculate the cumulative sum of the vector passed as 
-## argument
-# str_detect function returns a logical value (i.e. FALSE or TRUE),
- mutate(linenumber = row_number(),
- chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", 
- 
- ignore_case = TRUE)))) %>% ungroup() %>%
- unnest_tokens(word, text)
-```
-
-following codes separate the words with joy only in nrc library.
-
-```{r}
-nrc_joy <- get_sentiments("nrc") %>%
- filter(sentiment == "joy")
-#Summarize the usage of `joy` words
-tidy_books %>%
- semi_join(nrc_joy) %>%
- count(word, sort = T)
-
-```
-
-
-```{r}
-tidy_books <- austen_books() %>%
- group_by(book) %>%
- mutate(linenumber = row_number(),
- chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
- 
- ignore_case = TRUE)))) %>%
- 
- ungroup() %>%
- unnest_tokens(word, text)
-```
-
-In the following codes we are generateing the random data and using it for the sentimental analysis.
-```{r}
-## Creating identification number to represent 50 individual people
-ID <- c(1:20)
-## Creating sex variable (10 males/10 females)
-Sex <- rep(c("male", "female"), 10) # rep stands for replicate
-## Creating age variable (20-39 year olds)
-Age <- c(26, 25, 39, 37, 31, 34, 34, 30, 26, 33, 
- 39, 28, 26, 29, 33, 22, 35, 23, 26, 36) 
-## Creating a dependent variable called Score
-Score <- c(0.010, 0.418, 0.014, 0.090, 0.061, 0.328, 0.656, 0.002, 0.639, 0.173, 
- 0.076, 0.152, 0.467, 0.186, 0.520, 0.493, 0.388, 0.501, 0.800, 0.482)
-## Creating a unified dataset that puts together all variables
-## tibble is a simple dataframe 
-data <- tibble(ID, Sex, Age, Score)
-## group by sex
-data %>% 
- group_by(Sex) %>% 
- summarize(m = mean(Score), # calculates the mean
- s = sd(Score), # calculates the standard deviation
- n = n()) %>% # calculates the total number of observations
- ungroup()
-##`summarise()` ungrouping output (override with `.groups` argument)
-# A tibble: 2 x 4
-##x m s n
-##hr> <dbl> <dbl> <int>
-##1 female 0.282 0.184 10
-##2 male 0.363 0.300 10
-## mutate() and group_by()
-data %>% 
- group_by(Sex) %>% 
- mutate(m = mean(Score)) %>% # calculates mean score by Sex
- ungroup()
-janeaustensentiment <- tidy_books %>%
- inner_join(get_sentiments("bing")) %>%
- count(book, index = linenumber %/% 100, sentiment) %>%
- 
- spread(sentiment, n, fill = 0) %>%
- 
- mutate(sentiment = positive - negative)
-```
-
-Following plot shows the data for the sentiments for different chapters of the Jane book.
-
-```{r}
-ggplot(data = janeaustensentiment, mapping = aes(x = index, y = 
-sentiment, fill = book)) +
- geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
- facet_wrap(facets = ~ book, ncol = 2, scales = "free_x")
-
-```
+df = rbind(text_df3,text_df4,text_df5,text_df6,text_df7,text_df8,text_df9,text_df10,
+           text_df11,text_df12,text_df13,text_df14,text_df15,text_df16,text_df17,text_df18,
+           text_df19,text_df20,text_df21,text_df22,text_df23,text_df24,text_df25,text_df26,
+           text_df27,text_df28,text_df29,text_df30,text_df31,text_df32,text_df33,text_df34,
+           text_df35,text_df36,text_df37,text_df38,text_df39,text_df40,text_df41)
+dd <- df %>%
+  # Tokenization
+  unnest_tokens(word, V1) %>%
+  # Remove Stop Words
+  anti_join(get_stopwords())
 
 
-
-# Part-B
-
-I am texts available on this website.  https://www.toppr.com/guides/essays/freedom-essay/ . Lets load the dataset.
-
-```{r}
-
-myFile <- 'D:/ahmed al/txt.txt' 
-dat <- read.table(myFile, header = FALSE, fill = TRUE)
-head(dat)
-```
-
-let's reshape the dataset for the sentimental analysis.
-
-```{r}
-tidy_dat <- tidyr::gather(dat, key, word) %>% select(word)
-head(tidy_dat)
-```
-Counting the words in the text file.
-
-```{r}
-tokens <- tidy_dat %>% 
-unnest_tokens(word, word) %>% 
-dplyr::count(word, sort = TRUE) %>% 
-ungroup()
-tokens %>% head(10)
-
-```
-Let's remove the stop words from the dataset.
-
-```{r}
-# remove stop words
-data("stop_words")
-tokens_clean <- tokens %>%
- anti_join(stop_words,by = "word")
-```
-
-Let's remove the numbers from the dataset.
-```{r}
-# remove numbers
-nums <- tokens_clean %>% filter(str_detect(word, "^[0-9]")) %>% 
-select(word) %>% unique()
-tokens_clean <- tokens_clean %>% 
- anti_join(nums, by = "word")
-
-```
-
-Let's create the word cloud of the data.
-```{r}
-pal <- brewer.pal(8,"Dark2")
-# plot the 50 most common words
-tokens_clean %>% 
- with(wordcloud(word, n, random.order = FALSE, max.words = 50, 
-colors=pal))
-
-```
-
-
-
-# Part-C
-
-
-```{r}
-
-#install.packages("SentimentAnalysis") 
-library(SentimentAnalysis)
-sentiment <- analyzeSentiment("Yeah, this was a great soccer game for the German team!")
-sentiment$PositivityGI
-#In case you had any errors, run this line of code:
-#install.packages("SnowballC")
-library(SnowballC)
-sentiment$NegativityGI
-sentiment$WordCount
-```
-Positive score is 0.3333 and negative score is zero. The word count is 6.
-
-```{r}
-documents <- c ("Wow, I really like the new light sabers!", 
-                "That book was excellent.",
-                "R is a fantastic language.",
-                "The service in this restaurant was miserable.",
-                "This is neither positive or negative.",
-                "The waiter forget about my dessert -- what poor service!")
-sentiment <- analyzeSentiment(documents)
-sentiment$SentimentQDAP
-convertToDirection(sentiment$SentimentQDAP)
-convertToBinaryResponse(sentiment$SentimentQDAP)
-
-```
-This code gets the sentiment score for the sentences and convert the sentiment scores into the binary responses, and converts it into factors.
-
-
-```{r}
-response <- c(+1, +1, +1, -1, 0, -1)
-compareToResponse(sentiment, response)
-
-```
-We created the exact responses for the sentences and compared them with the sentiment score by our analysis and got all the scores by comparison. 
-
-# PArt-D
-
-```{r}
-
-##1.2 The unnest_tokens function
-#Emily Dickinson wrote some lovely text in her time.
-text <- c("Because I could not stop for Death -",
-          "He kindly stopped for me -",
-          "The Carriage held but just Ourselves -",
-          "and Immortality")
-text 
-##This is a typical character vector that we might want to analyze. 
-##To turn it into a tidy text dataset, 
-##we first need to put it into a data frame.
-library(dplyr)
-text_df <- tibble(line = 1:4, text = text)
-text_df
-#Within our tidy text framework, we need to both break the text into 
-#individual tokens (a process called tokenization) and transform it to
-#a tidy data structure. To do this, we use tidytext’s unnest_tokens() function.
-library(tidytext)
-text_df %>%
-  unnest_tokens(word, text)
-
-```
-Just appear at the line 3.
-
-```{r}
-##1.3 Tidying the works of Jane Austen published novels
-library(janeaustenr)
-library(dplyr)
-library(stringr)
-original_books <- austen_books() %>%
-  group_by(book) %>%
-  mutate(linenumber = row_number(),
-         chapter = cumsum(str_detect(text, 
-                                     regex("^chapter [\\divxlc]",
-                                           ignore_case = TRUE)))) %>%
-  ungroup()
-original_books
-
-```
-
-
-CHAPTER 1 appears at the line 10 and chapter 1.
-
-```{r}
-#To work with this as a tidy dataset, we need to restructure it in the one-token-per-row format, 
-#which as we saw earlier is done with the unnest_tokens() function.
-library(tidytext)
-tidy_books <- original_books %>%
-  unnest_tokens(word, text)
-tidy_books
-#This function uses the tokenizers package to separate each line of text in the original data frame into tokens.
-## remove stop words (kept in the tidytext dataset stop_words)
-data(stop_words)
-tidy_books <- tidy_books %>%
-  anti_join(stop_words)
-
-```
-Tokenization means splitting the sentences into words and counting the appearance of the words. It remove all the stop words from the data.
-```{r}
-##use dplyr’s count() to find the most common words in all the books as a whole
-tidy_books %>%
+dd %>%  
   count(word, sort = TRUE)
 
+snts<- get_sentiments("loughran")
+# get POSITIVE words
+positive <- get_sentiments("loughran") %>%
+  filter(sentiment == "positive")
+# get NEGATIVE words
+negative <- get_sentiments("loughran") %>%
+  filter(sentiment == "negative")
+
+# count positive words
+count_positive <- dd %>%
+  semi_join(positive) %>%
+  count(word, sort = TRUE)
+
+# count negative words
+count_negative <-dd %>%
+  semi_join(negative) %>%
+  count(word, sort = TRUE)
+head(count_positive)
+head(count_negative)
+
+# get uncertainty words
+uncertainty <- get_sentiments("loughran") %>%
+  filter(sentiment == "uncertainty")
+
+# count uncertain words
+count_uncertain <- dd %>%
+  semi_join(uncertainty) %>%
+  count(word, sort = TRUE)
+
+# get litigious words
+litigious <- get_sentiments("loughran") %>%
+  filter(sentiment == "litigious")
+
+# count uncertain words
+count_litigious <- dd %>%
+  semi_join(litigious) %>%
+  count(word, sort = TRUE)
+
+sd = count_positive[order(-count_positive$n),]
+sd = sd[1:20,]
+
+ds = count_negative[order(-count_negative$n),]
+ds = ds[1:20,]
+
+fd = count_uncertain[order(-count_uncertain$n),]
+fd = fd[1:20,]
+
+gf = count_litigious[order(-count_litigious$n),]
+gf = gf[1:20,]
+
+
+x=ggplot(sd,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty positve words") +xlab("Number of words")+ylab("Words")
+xx=ggplot(ds,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty negative words") +xlab("Number of words")+ylab("Words")
+xxx=ggplot(fd,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty uncertain words")+xlab("Number of words")+ylab("Words")
+xxxx=ggplot(gf,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty litigious words")+xlab("Number of words")+ylab("Words")
+
 ```
-These are the top 5 common words. miss time fanny dear and lady.
+```{r}
+ggplot(sd,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty positve words")+xlab("Number of words")+ylab("Words")
+ggplot(ds,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty negative words")+xlab("Number of words")+ylab("Words")
+ggplot(fd,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty uncertain words")+xlab("Number of words")+ylab("Words")
+ggplot(gf,aes(x=reorder(word, n),y=n))+geom_col()+coord_flip()+ggtitle("Top twenty litigious words")+xlab("Number of words")+ylab("Words")
+```
 
 ```{r}
-##create a visualization of the most common words 
-library(ggplot2)
-
-tidy_books %>%
-  count(word, sort = TRUE) %>%
-  filter(n > 300) %>%
-  mutate(word = reorder(word, n)) %>%
-  ggplot(aes(n, word)) +
-  geom_col() +
-  labs(y = NULL)
-
+require(gridExtra)
+#lay <- rbind(c(1,2),
+#c(3,3))
+grid.arrange(x, xx, ncol=2 , layout_matrix = rbind(c(1,2)))
 ```
 
-The above code counts the words frequency, and filter the words that occur more than 300 times. After that we reorder the data and plot them on the y axis in the graph. 
-The word 'miss' is the most occuring and 'eyes' is the least occuring.  
+```{r}
+require(gridExtra)
+#lay <- rbind(c(1,2),
+#c(3,3))
+grid.arrange(xxx, xxxx, ncol=2 , layout_matrix = rbind(c(1,2)))
+```
