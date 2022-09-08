@@ -1,0 +1,52 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+# Question 3
+
+Null Hypothesis: Two variables are independent
+Alternative Hypothesis: Two variables are dependent.
+
+```{r message=FALSE, warning=FALSE}
+chisq.test(c(27,56,45,62),p=c(0.142,0.295,0.237,0.326))
+```
+We have chi-squared value of 12 and P-value of 0.2133 which is higher than the significance level of 0.05. We are unable to reject the null hypothesis and both the variables are independent of each other.
+
+
+Independent loglinear model.
+
+```{r}
+tab = rbind(c(27, 56, 45, 62),c(58,69,53,19))
+#fit the model
+try1 = loglin(tab,margin=list(1,2)); try1
+try2 = loglin(tab,margin=list(1,2),fit=T,param=T)
+
+```
+
+# Question 5
+
+
+```{r}
+library(readr)
+df <- read_csv("C:/Users/Sajid/Downloads/Diabetes (1).csv")
+```
+
+```{r}
+model = glm(diabetes~.,df,family = binomial)
+summary(model)
+model2 = glm(diabetes~glucose+pregnant+mass +pedigree,df,family = binomial)
+summary(model2)
+```
+```{r}
+model3 = glm(diabetes~glucose+pregnant+mass +pedigree+glucose*mass,df,family = binomial)
+summary(model3)
+```
+
+
+```{r}
+anova(model,model2,model3)
+```
+
