@@ -1,0 +1,158 @@
+---
+title: "Analysing the Effect of Drugs on the Happiness Rating of different Countries"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  word_document: default
+---
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(readr)
+library(tidyverse)
+df <- read_csv("Drug Use.csv")
+head(df)
+
+```
+
+```{r echo=FALSE}
+summary(df)
+```
+
+
+
+```{r echo=FALSE}
+a = df[which(df$`happiness rating (2006)`>7),c(1,6)]
+summary(a)
+ggplot(a, aes(x=reorder(`COUNTRY (lowest estimate or overall estimate used)`,`happiness rating (2006)`),y=`happiness rating (2006)`,fill =`happiness rating (2006)`))+geom_col()+coord_flip()
+```
+Graph 1. Bar chart showing countries with a happiness rating above 7. Results were obtained in 2006. The key represents this in a colour coordinated way.
+# Countries with less than 4.5 happines rating
+
+```{r echo=FALSE}
+a = df[which(df$`happiness rating (2006)`<4.5),c(1,6)]
+ggplot(a, aes(x=reorder(`COUNTRY (lowest estimate or overall estimate used)`,-`happiness rating (2006)`),y=`happiness rating (2006)`,fill =`happiness rating (2006)`))+geom_col()+coord_flip()
+```
+Graph 2. Bar chart showing countries with less than 4.5 happiness rating. Results were obtained in 2006. The key helps display this in a visual way.
+
+
+
+```{r echo=FALSE}
+b = df[which(df$`total drug use`>7),c(1,6,7)]
+ggplot(b, aes(x=reorder(`COUNTRY (lowest estimate or overall estimate used)`,`total drug use`),y=`total drug use`,fill =`happiness rating (2006)`))+geom_col()+coord_flip()
+```
+Graph 3. Bar chart showing countries with the highest drug usage and the happiness rating for each of these (from the coloured key).
+
+These results suggest that the countries with the highest drug usage are not necessarily the ones with the highest happiness rating. For example, Ghana is the country with the highest drug usage (around 22), however, it only has a happiness rating of around 5. Another example is Denmark, which has a happiness rating of around 8 and a total drug usage of 7.5. Therefore, this graph does not suggest a significance between the happiness rating of a country and its total drug usage.
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(df,aes(x = `total drug use`,y = `alcohol use per capita`
+              ,col = `happiness rating (2006)`))+geom_point()+ggtitle("Drugs use vs Alcohol Use")
+```
+
+Graph 4. Scatter graph comparing total drug use per capita and total alcohol use (litres of pure alcohol) per capita. The coloured key entails the happiness rating for each data point.
+
+These results suggest a small degree of corelation. Although this is not extremely clear, as drug usage increases, alcohol usage also increases until the drug usage reaches around 15, after which a decrease can be seen in the alcohol usage. The two countries that have the highest drug and alcohol usage have a low happiness rating. However, it is also true that the countries with the lowest drug and alcohol seem to have lower happiness ratings.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(df,aes(x = `Cocaine, % of pop adults`,y = `Cannabis, % of pop, adults`
+              ,col = `happiness rating (2006)`))+geom_point()+ggtitle("Cocaine vs Cannabis")
+```
+Graph 5. Scatter graph showing the relationship between cocaine and cannabis use. The key shows the happiness rating for each country.
+
+This graph suggests a relationship between cannabis and cocaine use: as cocaine use increases, so does cannabis use. Moreover, it can be observed that most countries that had a high cannabis use has a higher happiness rating. In addition, the happiness rating for cocaine usage seems to be higher than for cannabis usage. The two countries with the highest cannabis use have a happiness rating of around 5, while the countries with the highest cocaine use have a happiness rating of around 7.5.
+Therefore, in order to establish whether these correlations are significant, a correlation heat map will be conducted and analysed for each variable against each other. This will give a better idea to whether the scatter and bar charts were interpreted in the correct way.
+
+
+```{r echo=FALSE}
+library(tidyverse)
+colnames(df)
+cor_data = df[,-1]
+core1 = cor(cor_data,use = 'pairwise.complete.obs')
+
+library(pheatmap)
+pheatmap(core1,display_numbers = T, cluster_rows = F, cluster_cols = F, main = "Correlation Heatmap")
+```
+Figure 1. Heatmap showing correlation between cocaine, amphetamine, cannabis, opiates, alcohol, total drug usage and happiness rating. The key states that the highest correlations will be displayed in red.
+
+These results indicate that there is a significantly high correlation between cannabis use and total drug use of 0.98. Furthermore, there is a correlation between cocaine and total drug use of 0.65 and between cocaine and cannabis use of 0.53.
+
+On the other hand, there is no significant correlation between total drug use and alcohol use per capita (0.37). There is also no significant correlation between happiness rating and total drug use (0.43) as previously observed in Graph 3.
+
+In order to make these correlation patterns more visual, a pairs plot will be carried out.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library("ggplot2")                     
+library("GGally")
+ggpairs(cor_data)+theme_bw()
+```
+
+Figure 2. Pairs plot showing correlation between cocaine, amphetamine, cannabis, opiates, alcohol, total drug use and happiness rating.
+
+This figure suggests similar results to the correlation heat map. A clear linear regression can be observed when comparing cannabis and total drug use. Furthermore, a less significant linear regression can be identified when looking at cocaine and total drug use. A similar pattern can be seen when comparing cocaine and cannabis use.
+
+All other comparisons show no significant relationships.
+
+Next, a histogram will be plotted for each of the variables in order to establish normal distribution in the data.
+
+
+
+```{r echo=FALSE}
+library(Hmisc)
+hist.data.frame(cor_data)
+```
+Graph 6. Histograms of cocaine, cannabis, amphetamine, opiates, alcohol, total drug use and happiness rating.
+
+These results suggest that the only data set with a clear normal distribution is happiness rating. This can be deduced because it is the only variable which displays a bell curve.
+
+All other variables demonstrate results that are skewed to the right are not normally distributed. However, this could be due to missing values in the data sets. Therefore, in order to present this idea, a visual representation of missing data will be demonstrated.
+
+
+
+```{r echo=FALSE}
+library(naniar)
+vis_miss(df)
+```
+Figure 3. Missing values occurrence for countries, cocaine, cannabis, amphetamine, opiates, alcohol, total drug use and happiness rating variables.
+
+This figure shows that 28.4% of the total data set is missing. No data is missing for the country names and total drug use, however, there are missing values for every other variable. The variables with the most missing data are cocaine (56.48% of data missing) and amphetamines (55.96% of data missing).
+
+In order to determine whether the missing data for each variable align with each other, a graph of missing values was plotted.
+
+
+```{r echo=FALSE}
+gg_miss_upset(df)
+```
+
+Graph 7. Bar chart showing missing values for opiates, cannabis, amphetamine, cocaine and happiness rating. Through this we can observe whether the missing data aligns.
+
+These results show that 34 values were missing for all variables. 16 values are missing for opiates, cannabis, amphetamine and cocaine variables. 18 values are missing for cannabis, amphetamine and cocaine.
+
+Amphetamine and cocaine were the two variables with the most data missing - more than 90 missing values each. Happiness rating was the variable with the least missing values (57).
+
+When all missing values were counted, they added up to 132. These were all removed from the data set so that statistical analyses could be more reliable.
+
+
+# Linear regression model
+
+
+```{r echo=FALSE, warning=FALSE}
+cor_data = cor_data[,-2]
+model= lm(`happiness rating (2006)`~.,cor_data)
+summary(model)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(df,aes(`happiness rating (2006)`, `Cocaine, % of pop adults`)) +
+  geom_point() + 
+  geom_smooth(method='lm', formula= y~x)
+```
+
+Graph 8. Linear regression graph showing cocaine use against happiness rating.
+
+This graph provides a visual representation of the relationship between the two variables. It reinforces the idea that there is a statistically significant relationship between the dependent and independent variable. Therefore, it can be concluded that countries with a higher cocaine usage have a higher happiness rating. However, the same cannot be said for amphetamine, opiates, cannabis, alcohol and total drug usage.
+
