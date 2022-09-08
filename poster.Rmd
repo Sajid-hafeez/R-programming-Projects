@@ -1,0 +1,72 @@
+---
+title: "Public Engagment"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(readr)
+library(tidyverse)
+library(grid)
+df <- read_csv("CO2 Emissions per country.csv",skip = 2)
+
+uk = df[10,]
+a = data.frame(t(uk))
+b = a[2:41,1]
+b = as.numeric(b)
+y = 1971:2010
+df1 = data.frame(y,b)
+
+
+
+usa = df[2,]
+dt = data.frame(t(usa))
+coo = dt[2:41,1]
+coo = as.numeric(coo)
+df2 = data.frame(y,coo)
+
+china = df[1,]
+dst = data.frame(t(china))
+coo2 = dst[2:41,1]
+coo2 = as.numeric(coo2)
+df3 = data.frame(y,coo2)
+
+imgage <- jpeg::readJPEG("co2.jpg")
+imgage1 <- jpeg::readJPEG("co2usa.jpg")
+imgage2 <- jpeg::readJPEG("co2uk.jpg")
+
+
+ UK = ggplot(df1)+ggtitle("CO2 Emission in UK")+
+  xlab("Years")+ylab("CO2 Emission") +annotation_custom(rasterGrob(imgage2, 
+                                                                  width = unit(1,"npc"), 
+                                                                  height = unit(1,"npc")), 
+                                                       -Inf, Inf, -Inf, Inf)+geom_line(aes(x = y, y = b),col = 'green',size=1.5)+theme(plot.background = element_rect(fill = "#BFD5E3"))
+
+
+
+
+USA = ggplot(df2)+ggtitle("CO2 Emission in USA")+xlab("Years")+ylab("CO2 Emission")+annotation_custom(rasterGrob(imgage, 
+                                                                                                                                           width = unit(1,"npc"), 
+                                                                                                                                           height = unit(1,"npc")), 
+                                                                                                                                -Inf, Inf, -Inf, Inf)+geom_line(aes(x = y, y = coo),col='red',size=2)+theme(plot.background = element_rect(fill = "#BFD5E3"))
+
+
+CHINA =  ggplot(df3)+ggtitle("CO2 Emission in China")+xlab("Years")+ylab("CO2 Emission")+annotation_custom(rasterGrob(imgage1, 
+                                                              width = unit(1,"npc"), 
+                                                             height = unit(1,"npc")), 
+                                                             -Inf, Inf, -Inf, Inf)+geom_line(aes(x = y, y = coo2),col='red',size=2)+theme(plot.background = element_rect(fill = "#BFD5E3"))
+
+
+require(gridExtra)
+#lay <- rbind(c(1,2),
+             #c(3,3))
+grid.arrange(USA, CHINA,UK, ncol=2 , layout_matrix = rbind(c(1,2),c(3,3)))
+
+
+```
+
+
+
