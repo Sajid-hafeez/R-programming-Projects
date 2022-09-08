@@ -1,0 +1,444 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  word_document: default
+---
+
+
+
+```{r}
+library(fpp3)
+library(pdfetch)
+library(pdfetch)
+library(ggplot2)
+library(tidyverse)
+library(lubridate)
+library(tsibble)
+library(rugarch)
+library(rmgarch)
+library(fpp2)
+library(forecast)
+library(aTSA)
+library(pdfetch)
+library(fGarch)
+library(stargazer)
+library(dynlm)
+library(urca)
+
+```
+
+```{r}
+#get variables from world bank
+inflation <- pdfetch::pdfetch_WB("FP.CPI.TOTL.ZG", c=("IND"))
+#view(inflation)
+unemployment <- pdfetch::pdfetch_WB("SL.UEM.TOTL.ZS", c=("IND"))
+#view(unemployment)
+
+```
+
+```{r}
+#rename variables
+
+colnames(inflation) <- c("Inflation")
+colnames(unemployment) <- c("Unemployment")
+
+#INFLATION
+
+#plot variables
+
+autoplot(inflation) +
+  ylab("Inflation %") +
+  xlab("") +
+  ggtitle("Inflation in India (CPI)")
+
+```
+
+Model: $\Delta  y_t =\gamma y_{t-1}+e_t$
+
+
+```{r}
+#test for unit roots 
+
+adf_Inflation <- ur.df(inflation)
+print(summary(adf_Inflation))
+
+```
+tau1 is the null hypothesis for $\gamma = 0$
+ I get "Value of test-statistic is -2.1846" and the "Critical values for test statistics are: tau1 -2.6 -1.95 -1.61
+Given that the test statistic is more extreme than critical value at 5%, we reject the null hypothesis that the unit root exist.
+
+
+```{r}
+#check for adf with drift 
+adf_drift_inflation <- ur.df(inflation, type="drift")
+print(summary(adf_drift_inflation))
+
+```
+
+model: $\Delta y_t = a_0 + \gamma y_{t-1}+e_t$ 
+$a_0$ refers to the drift term in the model.
+tau2 :Null hypothesis $\gamma=0$. (unit root)
+phi1: Combines H0: $\gamma= a_0 = 0$(unit root but no drift)
+Rejecting this null implies that one OR two was NOT zero.
+
+
+
+For tau2, since the test statistics is -5.8262 is more extreme than critical values at 1%, 5%, and 10%.We reject the null hypothesis that there exist a unit root.
+
+
+For phi1, since the test statistics is 16.9837 is greater than critical values at 1%, 5%, and 10%.We reject the null hypothesis that there exist a unit root and drift.
+
+
+#check for adf with trend 
+```{r}
+adf_trend_inflation <- ur.df(inflation, type="trend")
+print(summary(adf_trend_inflation))
+```
+
+Model: $\Delta y_t = a_0+\gamma *y_{t-1}+a_2*t+e_t$
+$a_0$ refers to the drift term in the model.
+tau3: Null hypothesis $\gamma=0$. (unit root)
+phi3: Combined H0: $\gamma= a_0 = 0$(unit root but no drift)
+phi2: H0: $\gamma= a_0 = a_2 = 0$(unit root, no drift term AND no time trend term)
+
+For tau3, since the test statistics is -5.8218 is more extreme than critical values at 1%, 5%, and 10%.We reject the null hypothesis that there exist a unit root.
+
+For phi2, since the test statistics is 11.3609 is more extreme than critical values at 1%, 5%, and 10%.We reject the null hypothesis that either gamma or a0 or both of them are not equal to zero.
+
+For phi3, since the test statistics is 17.0303 is greater than critical values at 1%, 5%, and 10%.We reject the null hypothesis that either gamma or a0 or a2 or all of them are not equal to zero.
+
+All three adf test shows that ou variable is stationary.
+
+```{r}
+#pp test for unit root 
+pp_inflation <- pp.test(inflation)
+pp_inflation
+```
+
+
+Null hypothesis: Data is not stationary
+Since value of test statistics is -35.6812 which is more extreme than 4.4673, we can reject the null hypothesis and data is stationary.
+
+
+pp test for trend 
+```{r}
+pp_inflation_trend <- ur.pp(inflation, model="trend")
+print(summary(pp_inflation_trend))
+```
+
+
+
+
+
+
+
+Null hypothesis: Data is not stationary
+Since value of test statistics is -35.3542 which is more extreme than 4.4673, we can reject the null hypothesis and data is stationary.
+Since our both tests, ADF and PP are presenting the same results we don't need to implement the KPSS.
+
+
+```{r}
+#fit model - ARIMA - forecast 
+fit_inflation <- auto.arima(inflation)
+fit_inflation
+library(forecast)
+a=autoplot(forecast::forecast(fit_inflation, h=5))
+as = forecast::forecast(fit_inflation, h=5)
+plot(as$residuals)
+qqnorm(as$residuals)
+summary(fit_inflation)
+```
+
+
+```{r}
+as = diff(unemployment,differences=4)
+as = na.omit(as)
+adf_unempolyment <- ur.df(as, type="none")
+print(summary(adf_unempolyment))
+```
+
+
+
+```{r}
+
+adf_unempolyment <- ur.df(unemployment, type="drift")
+print(summary(adf_unempolyment))
+```
+
+```{r}
+
+adf_unempolyment <- ur.df(unemployment, type="trend")
+print(summary(adf_unempolyment))
+```
+```{r}
+#pp test for unit root 
+pp_unemployment <- ur.pp(unemployment,type = "Z-tau",model = "constant")
+print(summary(pp_unemployment))
+```
+
+```{r}
+#pp test for unit root 
+pp_unemployment <- ur.pp(inflation,type = "Z-tau",model = "constant")
+print(summary(pp_unemployment))
+```
+
+```{r}
+autoplot(unemployment) +
+  ylab("Inflation %") +
+  xlab("") +
+  ggtitle("Inflation in India (CPI)")
+```
+
+
+# Arima:
+
+ACF plot is suggesting the value of q = 2 and value of p = 1
+ARIMA should b 102
+
+```{r}
+acf(inflation)
+pacf(inflation)
+```
+
+
+```{r}
+fit_inflation <- auto.arima(inflation,ic='aic',trace = T)
+fit_inflation
+
+```
+```{r}
+fit_inflation <- arima(inflation, order = c(4,0,5))
+```
+
+```{r}
+arch.test(fit_inflation)
+```
+
+
+```{r}
+acf(ts(fit_inflation$residuals))
+pacf(ts(fit_inflation$residuals))
+```
+
+
+
+```{r}
+a = forecast::forecast(fit_inflation,level=c(95),h=5*1)
+a
+```
+
+```{r}
+autoplot(a)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+sd<-diff(unemployment)
+acf(sd,na.action = na.pass)
+pacf(sd,na.action = na.pass)
+```
+
+
+```{r}
+fit_unemployment<- auto.arima(sd,ic='aic',trace = T)
+fit_unemployment
+```
+
+
+
+```{r}
+acf(ts(fit_unemployment$residuals))
+pacf(ts(fit_unemployment$residuals))
+```
+
+
+
+```{r}
+a = forecast::forecast(fit_unemployment,level=c(95),h=5*1)
+a
+```
+
+```{r}
+autoplot(a)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+Box.test(a$residuals,type = "Ljung-Box")
+```
+
+```{r}
+
+```
+
+
+```{r}
+unemployment_model <- arima(unemployment, order = c(0,0,1), seasonal=list(order=c(0,0,0)))
+summary(unemployment_model)
+arch.test(unemployment_model)
+tsdiag(unemployment_model)
+```
+
+```{r}
+inflation_model <- arima(inflation, order = c(0,0,0), seasonal=list(order=c(0,0,0)))
+arch.test(inflation_model)
+summary(inflation_model)
+tsdiag(inflation_model)
+checkresiduals(inflation_model)
+autoplot(inflation_model)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+acf(inflation)
+pacf(inflation)
+```
+
+
+```{r}
+a <- arima(inflation, order = c(4,0,5))
+```
+
+```{r}
+acf(ts(a$residuals))
+pacf(ts(a$residuals))
+```
+
+
+
+# Arima:
+
+```{r}
+ad =  diff(unemployment,differences=4)
+ad = na.omit(ad)
+
+fit_unemployment <- auto.arima(ad,ic='aic',trace = T)
+fit_unemployment
+#stargazer(fit_inflation)
+```
+```{r}
+acf(ts(fit_unemployment$residuals))
+pacf(ts(fit_unemployment$residuals))
+```
+
+
+
+```{r}
+a = forecast::forecast(fit_unemployment,level=c(95),h=5*1)
+a
+```
+
+```{r}
+autoplot(a)
+
+```
+
+```{r}
+Box.test(a$residuals,type = "Ljung-Box")
+```
+
+
+Performs Portmanteau Q and Lagrange Multiplier tests for the null hypothesis that the residuals of a ARIMA model are homoscedastic.
+```{r}
+unemployment_model <- arima(unemployment, order = c(0,0,0), seasonal=list(order=c(0,0,0)))
+arch.test(unemployment_model)
+```
+
+
+
+
+```{r}
+library(ARDL)
+dtmain = merge(unemployment, inflation, all = T)
+dtmain = na.omit(dtmain)
+dtmain =data.frame(dtmain)
+library(strucchange)
+sctest(Inflation~Unemployment,data =dtmain)
+
+# ARDL model
+mdl = auto_ardl(Inflation~Unemployment,data =dtmain,max_order = 5)
+mdl
+library(modelsummary)
+modelsummary(mdl$best_model)
+```
+
+
+```{r}
+library(lmtest)
+dwtest(mdl$best_model)
+```
+```{r}
+library(lmtest)
+bptest(mdl$best_model)
+```
+
+
+
+```{r}
+mdl = lm(Inflation~Unemployment,data=dtmain)
+summary(mdl)
+```
+
+```{r}
+grangertest(dtmain$Inflation~dtmain$Unemployment, order = 1)
+```
+
