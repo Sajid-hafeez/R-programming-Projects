@@ -1,0 +1,116 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+
+#Introduction
+
+
+
+
+
+
+# Data
+
+
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(Metrics)
+df <- read.csv("prgnorp1.csv")
+```
+
+
+
+
+```{r}
+dff = data.frame(df$GENDER_R,df$EARNMTHALL,df$AGE_R)
+colnames(dff) <- c("Gender","Earning","Age")
+dff
+```
+
+```{r}
+str(dff)
+dff$Earning = as.numeric(dff$Earning)
+dff = na.omit(dff)
+```
+
+
+
+Heatmap represent the correlation between the variables. Regression model has assumption that independent variable don't have high correlation between them.
+
+```{r}
+library(pheatmap)
+dff$Gender = as.numeric(dff$Gender)
+pheatmap(cor(dff),display_numbers = T,cluster_rows = F,cluster_cols = F,main="Heatmap of correlation")
+
+```
+```{r}
+summary(dff)
+```
+
+```{r}
+library(ggplot2)
+ggplot(dff,aes(y=Earning,x=Age,col=Gender))+geom_point()+ggtitle("Scatter plot of earning with age")
+
+```
+Above plot represent the scatter plot of age variable with earning variable and color coges represent the age of the participants. black dots represent the data for male candidates and blue color represent the data for female participants. 
+
+
+```{r}
+library(ggplot2)
+ggplot(dff,aes(Gender))+geom_bar(fill='black')+ggtitle("Gender")+xlab("1=male,2=female")
+```
+Above bar chart represent the count of the male and females in the data.
+```{r}
+ggplot(dff,aes(Age))+geom_histogram(bins = 25,fill="#108A99",color="white")+ggtitle("Distribution of age variable")
+```
+This histogram represent the distribution of the age variable.
+```{r}
+ggplot(dff,aes(Earning))+geom_histogram(bins = 30,fill="#108A99",color="white")+ggtitle("Distribution of earning variable")
+```
+This histogram represent the distribution of the earning variable.
+# Results
+
+```{r}
+dff$Gender = as.factor(dff$Gender)
+model = lm(Earning~Gender,dff)
+pred = predict(model,dff)
+summary(model)
+mae(dff$Earning, pred)
+rmse(dff$Earning, pred)
+```
+our model shows that gender is statistically significant variable in the model. Now if we take a look at the coefficient value of the Gender, we can see it has a negative sign with it. Which shows that female has 13185 less income than the males when all other covariates are constant. R square value is showing that gender is able explain only 5% variance in the earning variable. The model has mean absolute error of 15122.21 and root mean square error is 27136.14 which will help us to compare the model performance with next model.
+
+
+
+```{r}
+dff = na.omit(dff)
+model = lm(Earning~.,dff)
+pred = predict(model,dff)
+summary(model)
+mae(dff$Earning, pred)
+rmse(dff$Earning, pred)
+```
+
+our model represents that both the independent variables are statistically significant at significance level of 0.05. Now if we take a look at the coefficient value of the Gender, we can see it has a negative sign with it. Which shows that female has 12739 less income than the males when all other covariates are constant. Age has a positive coefficient that explains that with the increase in age earning also increase and it makes sense. With a one unit increase in age earning will be 509.78 more according to our mode when all other factors are constant. R square value is showing that independent variables are able explain only 11.16 % variance in the earning variable. The model has mean absolute error of 14412.85 and root mean square error is 26313.31 which clearly shows that this model is performing much better than the pervious one.
+
+
+```{r}
+model2 = lm(Earning~Gender+Age+Gender*Age,dff)
+pred = predict(model2,dff)
+summary(model2)
+mae(dff$Earning, pred)
+rmse(dff$Earning, pred)
+```
+Our equation will become,
+$$earning = 16693.11-4374.44*Female gender+608.09*age-206.78*Gender*age$$
+our model represents that age and the intrection of age and gender are statistically significant at significance level of 0.05. Now if we take a look at the coefficient value of the Gender, we can see it has a negative sign with it. Which shows that female has 4374 less income than the males when all other covariates are constant. Interaction of Age and gender has a negative coefficient that can be interpret using the derivative of regression equation. 
+$$change in earning w.r.t age = 608.09-206.78*Gender$$
+We can find the change in earning by imputing the value of gender in equation which shows that female has 194.56 less income than the men.
+$$change in earning w.r.t gender = -4374.44-206.78*age$$
+
+We can find the change in earning by imputing the value of age in equation which shows that earning reduce with increase in age.
