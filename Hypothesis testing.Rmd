@@ -1,0 +1,292 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+# Question 8.4
+
+```{r}
+library(readr)
+df <- read_csv("muscle mass.csv")
+Data = df[,1:2]
+colnames(Data)=c("mass","age")
+```
+
+
+```{r}
+x1 = Data$age - mean(Data$age)
+x1sq = x1^2
+Data = cbind( Data, x1, x1sq)
+#fit a quadratic model (8.2)
+Quad = lm(mass ~ x1 + x1sq, data=Data )
+summary(Quad)
+#plot the points, then the fitted quadratic model
+plot( Data$x1, Data$mass, main="Polynomial Model",
+xlab="Age(centered)", ylab="Mass", pch=19 )
+#create (x,y) points for quadratic model; plot it using a blue line
+x = seq(-20, 20, by=.1)
+y = 82.935749 - 1.183958*x + 0.014840*x^2
+lines( x, y , col="blue")
+```
+
+
+Null hypothesis is H0: β1 = β11 = 0; 
+Alternative Hypothesis is Ha: β1 and β11 and not both 0.
+Decision rule: Reject H0 if  the p-value < 0.05. Our model has p value of 2.2e-16.
+Since th p value is less than 0.05, regression model suggests that there is sufficient evidence to indicate that a regression relation exists between muscle mass and the centered age variable and its squared value. We have R square value of 0.7632 and adjusted R square is 0.7549.
+
+
+```{r}
+library(tidyverse)
+df = filter(Data,age==48)
+```
+
+```{r}
+t.test(df$mass)
+mean(df$mass)
+```
+```{r}
+x1 = 48-mean(Data$age)
+x1sq=x1^2
+predict(Quad,data.frame(x1,x1sq))
+```
+e.
+Null hypothesis is H0: β1  = 0; 
+Alternative Hypothesis is Ha: β1 and β11 and not both 0.
+Decision rule: Reject H0 if  the p-value < 0.05. x1 square has p value of 0.08.
+We are failed to reject the null hypothesis. We should drop the square term.
+
+f.
+
+```{r}
+mdl = lm(mass~age,Data)
+summary(mdl)
+```
+
+g.
+
+```{r}
+cor(Data$mass,Data$age)
+cor(Data$x1,Data$x1sq)
+
+```
+
+ Yes, it is helpful to use the centered data to avoid high correlation.
+ 
+# Question  8.5
+
+a
+
+```{r}
+plot(Data$mass,Quad$residuals)
+plot(Data$age,Quad$residuals)
+
+```
+
+b.
+
+H0: Full model does not offers better fit than the reduced model
+H1: Full model does offers better fit than the reduced model.
+we make the assumption that data is normally distributed, absense of outliers, homogeneity of variances and independence of observations.
+
+```{r}
+mdl = lm(mass~x1,Data)
+anova(Quad,mdl)
+```
+c.
+We are failed to reject the null hypothesis and full model does not offer the better fit than the reduced model.
+
+```{r}
+x1 = Data$age - mean(Data$age)
+x1sq = x1^2
+x1cb = x1^3
+Data = cbind( Data, x1, x1sq, x1cb)
+#fit a quadratic model (8.2)
+Cube = lm(mass ~ x1 + x1sq+ x1cb, data=Data )
+summary(Cube)
+```
+
+Null hypothesis is H0: β2  = 0; 
+Alternative Hypothesis is Ha: β2 is not equal to 0.
+Decision rule: Reject H0 if  the p-value < 0.05. x1 square has p value of 0.7193.
+We are failed to reject the null hypothesis. We should drop the cube term.
+
+
+# Question 8.15
+
+a
+Beta0 is the intercept of the regression model
+Beta1 is the regression coefficient of the total number of minutes spent.
+Beta2 is the regression coefficient type of the model.
+
+b
+```{r}
+library(readr)
+df <- read_csv("copier maintenance.csv")
+````
+
+
+```{r}
+mdl = lm(`total number of minutes spent (Y)`~.,df)
+summary(mdl)
+```
+The estimated regression function is $Y = -0.9225+ 15.0461*X_1 +0.7589*X_{11} $
+c
+P values of the copier model suggest that copier is not statistically significant. Following T test shows the confidence interval of the Type variable.
+```{r}
+t.test(df$V3)
+```
+
+d
+More variable bring more information to the which result in better fit, that's why we need to add more and more meaningful variables in the model.
+
+e
+
+```{r}
+plot(mdl$residuals, df$`copiers serviced (X)`*df$V3)
+```
+
+No, its not useful to add the interaction term.
+
+# Question 8.16
+
+```{r}
+library(readr)
+df <- read_csv("gpa data.csv")
+```
+a) Beta0 is intercept term. 
+Betai1 is the coefficient for the test score variable.
+Betai2 is the coefficient for the major field.
+
+b)
+```{r}
+mdl = lm(GPA~.,df)
+summary(mdl)
+```
+
+The estimated regression function is $$Y= 2.19842+0.03789*X_{i1}-0.09430*X_{i2} $$
+
+c)
+
+
+Null hypothesis is H0: β  = 0; Variable has no impact on the outcome variable 
+Alternative Hypothesis is Ha: β2 is not equal to 0. Variable has impact on the outcome variable
+Decision rule: Reject H0 if  the p-value < 0.01. 
+Since interaction term has p value of 0.43.
+We are failed to reject the null hypothesis. H0 accepted
+
+d)
+
+
+```{r}
+plot(df$`ACT test score`*df$V3,mdl$residuals)
+```
+
+Yes, we should investigate the intraction term as well.
+
+# Question 8.19 
+
+
+```{r}
+library(readr)
+df <- read_csv("copier maintenance.csv")
+```
+a)
+
+
+
+```{r}
+mdl = lm(`total number of minutes spent (Y)`~`copiers serviced (X)`+V3+`copiers serviced (X)`*V3,df)
+summary(mdl)
+```
+The regression function is $$Y =  2.8131+14.3394X_1-8.1412X_{11}+1.7774X_1 * X_{11}$$
+
+
+b)
+Null hypothesis is H0: β  = 0; Variable has no impact on the outcome variable 
+Alternative Hypothesis is Ha: β2 is not equal to 0. Variable has impact on the outcome variable
+Decision rule: Reject H0 if  the p-value < 0.05. 
+Since interaction term has p value of 0.07.
+We are failed to reject the null hypothesis. H0 accepted.
+
+# Question 8.20
+
+```{r}
+library(readr)
+df <- read_csv("gpa data.csv")
+```
+
+
+```{r}
+mdl = lm(GPA~`ACT test score`+V3+`ACT test score`*V3,df)
+summary(mdl)
+```
+Null hypothesis is H0: β  = 0; Variable has no impact on the outcome variable 
+Alternative Hypothesis is Ha: β2 is not equal to 0. Variable has impact on the outcome variable
+Decision rule: Reject H0 if  the p-value < 0.1. 
+Since interaction term has p value of 0.02.
+We reject the null hypothesis. H1 accepted.
+We have positive estimate of interaction term which tells us the postive relation of major on GPA.
+
+
+
+# Question 8.34
+
+a
+The regression function is
+$$ Y_i = \beta_0+\beta_1X{i1}+\beta_2X{i2}+\beta_3X{i3}+e  $$
+b
+Commercial model:$$ Y_i = (\beta_0+\beta_2)+\beta_1X{i1}+e  $$
+ 
+Savings & loan model:$$ Y_i = (\beta_0+\beta_3)+\beta_1X{i1}+e  $$
+Mutual savings model:$$ Y_i = (\beta_0-\beta_2-\beta_3)+\beta_1X{i1}+e  $$
+
+c. 
+β0 is the average of the 3 intercepts. Then:
+β2 is the additional intercept for the relationship between Y and X1 for
+Commercial banks
+
+β3 is the additional intercept for the relationship between Y and X1 for Mutual savings.
+
+−β2 −β3 is the additional intercept for the relationship between Y and X1 for
+Savings and loans. 
+
+# Question 8.37
+
+
+```{r}
+library(readr)
+df <- read_csv("CDI.csv")
+```
+
+
+
+```{r}
+df$crimeratio = df$`Total serious crimes`/df$`Total population`
+df$crimeratio2 = df$crimeratio^2
+df$density = df$`Total population`/df$`Land area`
+df$density2 = df$density^2
+df$`Percent unemployment2` = df$`Percent unemployment`^2
+mdl = lm(crimeratio~density+`Percent unemployment`+density2+`Percent unemployment2`+density*`Percent unemployment`+density2*`Percent unemployment2`,df)
+summary(mdl)
+plot(mdl$fitted.values,mdl$residuals)
+```
+R square suggest that independent variables are able to explain 24.6% of the variance in crime ratio.
+
+b)
+Null hypothesis is H0: β  = 0; Variable has no impact on the outcome variable 
+Alternative Hypothesis is Ha: β2 is not equal to 0. Variable has impact on the outcome variable
+Decision rule: Reject H0 if  the p-value < 0.01. 
+Since interaction term has p value greater than 0.01.
+We reject the null hypothesis. H0 accepted. We should drop the sqaure and interaction terms.
+
+c
+
+```{r}
+mdl2 = lm(crimeratio~`Total population`+`Percent unemployment`+`Land area`,df)
+summary(mdl2)
+```
+
+Yes the coefficent are different. R squre suggests that pervious model explained more variance in the crime ratio.
