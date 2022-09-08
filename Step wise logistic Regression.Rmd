@@ -1,0 +1,52 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+
+
+
+```{r}
+
+library(readr)
+diabetic_data <- read_csv("diabetic_data_clean_S1.csv")
+diabetic_data<-na.omit(diabetic_data)
+```
+
+
+```{r}
+fin=NULL
+for (i in unique(diabetic_data$readmitted)) {
+  sub=subset(diabetic_data, diabetic_data$readmitted==i)
+  sam=sub[sample(nrow(sub), 11000), ]
+  fin=rbind(fin, sam)}
+table(fin$readmitted)
+```
+
+```{r}
+fin$readmitted[fin$readmitted=='<30'] <-0
+fin$readmitted[fin$readmitted=='>30'] <-1
+fin$readmitted[fin$readmitted=='NO'] <-NA
+
+
+```
+
+
+```{r}
+fin = na.omit(fin)
+```
+
+```{r}
+fin$readmitted = as.numeric(fin$readmitted)
+fullmod = glm(readmitted~.,data = fin,family=binomial)
+summary(fullmod)
+```
+
+```{r}
+nothing <- glm(readmitted ~ 1,data=fin,family=binomial)
+forwards = step(nothing,
+scope=list(lower=formula(nothing),upper=formula(fullmod)), direction="forward")
+```
+
