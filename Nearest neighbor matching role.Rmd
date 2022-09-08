@@ -1,0 +1,214 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=F}
+library(MatchIt)
+library(arm)
+library(mosaic)
+options(digits = 3)
+```
+
+
+```{r}
+summary(MatchIt::lalonde)
+```
+
+Load the data that is within Match It.
+```{r}
+data(lalonde, package="MatchIt")
+```
+
+1.
+In this model we are including treat variable as out treatment group and re74, race, age, and education variable as control group. I am using Nearest neighbor matching role on Propensity score. Nearest neighbor matching runs through the all of treated units and select the closest control unit and pair them with each treated unit.
+```{r}
+m.out = matchit(treat ~ re74 + race, data = lalonde, method = "nearest", replace=F, ratio=1, verbose=T)
+```
+
+
+```{r}
+summary(m.out)
+```
+
+```{r}
+plot(m.out, type="jitter")
+plot(m.out, type="hist")
+
+```
+
+Goal:  these matched histograms should look similar.
+```{r}
+plot(m.out, type="hist")
+```
+
+Check each of the 7 variables:  
+
+Standardization = (mean1 - mean2)/sd
+
+```{r}
+m.out.summary=summary(m.out, standardize=T, addlvariables=with(lalonde, data.frame(married, nodegree, re75, age, educ)))
+plot(m.out.summary)
+```
+
+
+
+# With replacement
+
+Notice that we only get 36 matched control units.  We want to add a new option to improve this.
+```{r}
+m.out2 = matchit(treat ~ re74 + race+ age + edu, data = lalonde, method = "nearest", replace=T, ratio=1, verbose=T)
+```
+
+
+```{r}
+summary(m.out2)
+```
+
+```{r}
+plot(m.out2, type="jitter")
+```
+
+Specify we won't get reuse a control more than 8 times, and ratio -- 2:1 --> 3:1
+```{r}
+m.out2 = matchit(treat ~ re74 + race, data = lalonde, 
+                 method = "nearest", distance="glm", 
+                 replace=T, ratio=2, verbose=T, 
+                 min.controls = 1, max.controls = 8)
+```
+
+
+```{r}
+m.out2
+```
+
+
+```{r}
+plot(m.out2, type="jitter")
+```
+
+```{r}
+plot(m.out2, type="hist")
+```
+
+
+
+```{r}
+m.out.summary2=summary(m.out2, standardize=T, addlvariables=with(lalonde,data.frame(married, nodegree, re75, age, educ )))
+plot(m.out.summary2)
+```
+
+
+```{r}
+m.out.summary2
+```
+
+
+In the new library version, need to specify interactive=F
+```{r}
+plot(m.out, type="qq", interactive=F)
+```
+
+
+
+# Nearest neighbor propensity and exact matching 
+
+Exact match on no degree 
+```{r}
+m.out = matchit(treat ~ re74 + race, data = lalonde,
+                method = "nearest", replace=F, ratio=1, 
+                exact="nodegree", verbose=T)
+```
+
+
+```{r}
+m.out
+```
+
+```{r}
+m.out.summary=summary(m.out, standardize=T, addlvariables=with(lalonde,data.frame(married, re75, age, educ )))
+plot(m.out.summary)
+```
+
+
+```{r}
+m.out = matchit(treat ~ re74 + race, data = lalonde,
+                method = "nearest", replace=T, ratio=2, 
+                min.control=1, max.control=8,
+                exact=c("married", "nodegree"))
+m.out
+```
+
+
+```{r}
+m.out.summary=summary(m.out, standardize=T, addlvariables=with(lalonde,data.frame(married, re75, age, educ )))
+plot(m.out.summary)
+```
+
+
+```{r}
+plot(m.out, type="jitter")
+```
+
+```{r}
+plot(m.out, type="hist")
+```
+
+# Mahalanobis matching --- Mahalanobis variables must be continuous
+
+```{r}
+m.out = matchit(treat ~ re74  + race , data = lalonde,
+                method = "nearest", replace=T, ratio=2, 
+                mahvars=c("re74"), 
+                min.control=1, max.control=8,
+                exact=c("nodegree"), caliper=0.25)
+m.out
+```
+
+# Treatment effect after matching
+```{r}
+names(m.out)
+mdata = match.data(m.out)
+names(mdata)
+avg.income78.treated=weighted.mean(mdata$re78[mdata$treat == 1], 
+                                   mdata$weights[mdata$treat==1])
+avg.income78.control=weighted.mean(mdata$re78[mdata$treat==0], 
+                                   mdata$weights[mdata$treat==0])
+avg.income78.treated
+avg.income78.control
+avg.income78.treated- avg.income78.control
+```
+
+Job training program is associated with earning $805 more in 1978.
+
+# Treatment effect with regression after matching
+
+Same answer as above.
+```{r}
+model1=lm(re78 ~ treat, data=lalonde, weights=m.out$weights)
+display(model1, detail=T)
+```
+
+
+
+```{r}
+model1=lm(re78 ~ treat + age + educ + race + nodegree 
+          + married + re74 + re75, data=lalonde, weights=m.out$weights)
+display(model1, detail=T)
+```
+Without weights, this is what it looks like:
+
+```{r}
+model1=lm(re78 ~ treat + age + educ + race + nodegree 
+          + married + re74 + re75, data=lalonde)
+display(model1, detail=T)
+```
+
+Job training program is not associated with earning any additional income
+
