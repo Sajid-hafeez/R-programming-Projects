@@ -1,0 +1,66 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+# 1.
+```{r}
+library(data.table)
+CollegeData <- fread("Collegedata (1).csv") 
+```
+# 2.
+
+```{r}
+library(readr)
+CollegeDatatd <- read_csv("Collegedata (1).csv")
+```
+# 3.
+
+```{r}
+dim(CollegeData)
+```
+
+# 4.
+```{r}
+CollegeData[, c("INSTNM", "SAT_AVG","ADM_RATE")]
+
+```
+# 5
+```{r}
+library(tidyverse)
+CollegeDatatd %>% select("INSTNM", "SAT_AVG","ADM_RATE")
+```
+
+# 6.
+```{r}
+CollegeData[ADM_RATE < 0.2  & SAT_AVG >1500]
+```
+# 7.
+
+```{r}
+CollegeData[str_detect(INSTNM, 'American University') ]
+```
+
+# 8 .
+```{r}
+sd = CollegeData[order(-AGE_ENTRY)]
+fifteen = sd[138:152,c(4,11)]
+```
+
+# 9 .
+
+```{r}
+fifteen$AGE_ENTRY = as.numeric(fifteen$AGE_ENTRY)
+summary(fifteen$AGE_ENTRY)
+```
+
+
+
+# 10.
+```{r}
+CollegeDatatd %>% select(INSTNM,AGE_ENTRY)%>%arrange(desc(AGE_ENTRY))%>%slice(138:152)
+
+```
+
