@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  word_document: default
+---
+
+
+
+```{r}
+library(readxl)
+df <- read_excel("Desktop/adam/3419465 (2).xlsx")
+df = na.omit(df)
+```
+
+# Comperative Box plot
+
+```{r}
+library(ggplot2)
+ggplot(df,aes(x=JobSatisfaction,y=EducationField))+geom_boxplot()
+```
+# Average jobsatisfaction for each educational field
+
+
+```{r}
+table(df$EducationField,df$JobSatisfaction)
+library(tidyverse)
+df %>%
+  group_by(EducationField) %>%
+  summarise(avg_job_satisfaction  = mean(JobSatisfaction), number_of_entries = n())
+```
+# Scatter plot (Job statisfaction VS Job involvement)
+
+```{r}
+ggplot(df,aes(x=JobSatisfaction,y=JobInvolvement))+geom_point()
+```
+Since all the points are at same point it's more useful to use jitter plot.
+
+```{r}
+ggplot(df,aes(x=JobSatisfaction,y=JobInvolvement,col=JobInvolvement))+geom_jitter()
+```
+# Average Job staisfaction for each job involment
+
+```{r}
+library(tidyverse)
+a = df %>%
+  group_by(JobInvolvement) %>%
+  summarise(avg_job_satisfaction  = mean(JobSatisfaction), number_of_entries = n())
+a
+```
+
+
+
+```{r}
+# Create data for the graph.
+
+piepercent<- round(100*a$avg_job_satisfaction/sum(a$avg_job_satisfaction), 1)
+# Give the chart file a name.
+#png(file = "city.png")
+
+# Plot the chart.
+pie(a$avg_job_satisfaction,labels = piepercent, main = "Pie chart",col = rainbow(length(a$avg_job_satisfaction)))
+legend("topright", c("Job Involment = 1","Job Involment = 2","Job Involment = 3","Job Involment = 4"), cex = 0.8,
+   fill = rainbow(length(a$avg_job_satisfaction)))
+
+```
+
+
+
+
