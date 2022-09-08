@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+
+
+```{r message=FALSE, warning=FALSE}
+library(data.table)
+library(readr)
+library(tidyverse)
+df <- fread("nycdata.csv")
+df1 <- read_csv("nycdata.csv")
+
+```
+
+## 1.
+
+```{r}
+df[, c("year","month","day","hour")]
+```
+## 2.
+
+```{r}
+df[carrier == "DL" & origin == "JFK" & dest == "SEA"]
+```
+
+## 3.
+
+```{r}
+df[carrier == "UA" & month == 3 & air_time < 330]
+```
+
+## 4.
+
+```{r}
+df1 %>% 
+  filter(carrier == "UA" & month == 3 & air_time < 330 )
+```
+
+## 5.
+
+```{r}
+df[, c("speed") := .(distance / hour)]
+df
+```
+
+## 6.
+
+```{r}
+df1 %>%
+  mutate(speed = distance / hour) -> df1
+df1
+```
+## 7.
+a)
+```{r}
+df[carrier == "UA", carrier := "UniitedAir"]
+unique(df$carrier)
+```
+
+b)
+```{r}
+df1 %>%
+  mutate(carrier = recode(carrier, "UA" = "UniitedAir")) -> df1
+unique(df1$carrier)
+```
+
+
+
